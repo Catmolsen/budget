@@ -1,2 +1,93 @@
-# budget
-Budget
+
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Budget-app</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f4f6f8;
+    }
+
+    .box {
+      max-width: 500px;
+      margin: 30px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 14px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      margin-top: 0;
+      text-align: center;
+    }
+
+    label {
+      display: block;
+      margin-top: 12px;
+      font-weight: bold;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 18px;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      background: #007aff;
+      color: white;
+      font-size: 16px;
+    }
+
+    .resultat {
+      margin-top: 20px;
+      padding: 15px;
+      background: #eef6ff;
+      border-radius: 10px;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>Budget-app</h1>
+
+    <label for="budget">Årsbudget (kr.)</label>
+    <input type="number" id="budget" placeholder="Skriv dit budget">
+
+    <label for="forbrug">Brugt indtil nu (kr.)</label>
+    <input type="number" id="forbrug" placeholder="Skriv dit forbrug">
+
+    <button onclick="beregn()">Beregn restbeløb</button>
+
+    <div class="resultat" id="resultat">
+      Her vises dit restbeløb
+    </div>
+  </div>
+
+  <script>
+    function beregn() {
+      const budget = Number(document.getElementById("budget").value);
+      const forbrug = Number(document.getElementById("forbrug").value);
+      const rest = budget - forbrug;
+
+      document.getElementById("resultat").innerHTML =
+        "Du har <strong>" + rest.toLocaleString('da-DK') + " kr.</strong> tilbage.";
+    }
+  </script>
+</body>
+</html>
