@@ -1,93 +1,666 @@
-
 <!DOCTYPE html>
+
 <html lang="da">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Budget-app</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 20px;
-      background: #f4f6f8;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Udgifter">
+<title>Udgifter</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: #2e3350;
+    --accent: #4f8ef7;
+    --accent2: #7c5cfc;
+    --green: #2ecc8a;
+    --yellow: #f7c94f;
+    --red: #f75f5f;
+    --text: #e8eaf6;
+    --text2: #8b90b0;
+    --cat1: #4f8ef7;
+    --cat2: #2ecc8a;
+    --cat3: #f7c94f;
+    --cat4: #f75f5f;
+    --radius: 16px;
+    --radius-sm: 10px;
+    font-size: 16px;
+  }
 
-    .box {
-      max-width: 500px;
-      margin: 30px auto;
-      background: white;
-      padding: 20px;
-      border-radius: 14px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
+- { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
-    h1 {
-      margin-top: 0;
-      text-align: center;
-    }
+body {
+font-family: ‘Georgia’, serif;
+background: var(–bg);
+color: var(–text);
+min-height: 100vh;
+padding-bottom: 90px;
+overscroll-behavior: none;
+}
 
-    label {
-      display: block;
-      margin-top: 12px;
-      font-weight: bold;
-    }
+/* ── TOP NAV ── */
+.topbar {
+position: sticky; top: 0; z-index: 100;
+background: rgba(15,17,23,0.92);
+backdrop-filter: blur(12px);
+-webkit-backdrop-filter: blur(12px);
+padding: 14px 20px 10px;
+border-bottom: 1px solid var(–border);
+}
+.topbar h1 { font-size: 1.1rem; letter-spacing: 0.04em; color: var(–text2); font-weight: normal; font-style: italic; }
+.topbar .year-badge {
+display: inline-block; margin-left: 8px;
+background: var(–accent); color: #fff;
+border-radius: 6px; padding: 2px 8px; font-size: 0.8rem; font-family: monospace; font-style: normal;
+}
 
-    input {
-      width: 100%;
-      padding: 10px;
-      margin-top: 6px;
-      box-sizing: border-box;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-    }
+/* ── BOTTOM NAV ── */
+.botnav {
+position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+background: rgba(26,29,39,0.97);
+backdrop-filter: blur(12px);
+-webkit-backdrop-filter: blur(12px);
+border-top: 1px solid var(–border);
+display: flex;
+padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.botnav button {
+flex: 1; background: none; border: none; color: var(–text2);
+padding: 12px 0 10px; font-size: 0.65rem; letter-spacing: 0.06em;
+text-transform: uppercase; cursor: pointer; transition: color .2s;
+display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.botnav button svg { width: 22px; height: 22px; }
+.botnav button.active { color: var(–accent); }
 
-    button {
-      width: 100%;
-      margin-top: 18px;
-      padding: 12px;
-      border: none;
-      border-radius: 8px;
-      background: #007aff;
-      color: white;
-      font-size: 16px;
-    }
+/* ── PAGES ── */
+.page { display: none; padding: 20px; }
+.page.active { display: block; }
 
-    .resultat {
-      margin-top: 20px;
-      padding: 15px;
-      background: #eef6ff;
-      border-radius: 10px;
-      font-size: 18px;
-    }
-  </style>
+/* ── CARDS ── */
+.card {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: var(–radius);
+padding: 18px;
+margin-bottom: 14px;
+}
+.card-title {
+font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em;
+color: var(–text2); margin-bottom: 12px;
+}
+
+/* ── BUDGET BARS ── */
+.budget-item { margin-bottom: 18px; }
+.budget-item:last-child { margin-bottom: 0; }
+.budget-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+.budget-label { font-size: 1rem; display: flex; align-items: center; gap: 8px; }
+.cat-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.budget-amounts { font-size: 0.8rem; color: var(–text2); text-align: right; }
+.budget-amounts strong { color: var(–text); font-size: 0.95rem; }
+.bar-track { height: 8px; background: var(–surface2); border-radius: 4px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 4px; transition: width .5s ease; }
+.bar-ok { background: var(–green); }
+.bar-warn { background: var(–yellow); }
+.bar-over { background: var(–red); }
+.bar-pct { font-size: 0.72rem; color: var(–text2); margin-top: 3px; text-align: right; }
+
+/* ── FORMS ── */
+label { display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(–text2); margin-bottom: 6px; margin-top: 14px; }
+label:first-child { margin-top: 0; }
+input, select, textarea {
+width: 100%; padding: 14px; border-radius: var(–radius-sm);
+background: var(–surface2); border: 1px solid var(–border);
+color: var(–text); font-size: 1rem; font-family: inherit;
+-webkit-appearance: none; appearance: none;
+outline: none; transition: border-color .2s;
+}
+input:focus, select:focus, textarea:focus { border-color: var(–accent); }
+textarea { min-height: 70px; resize: none; }
+select { background-image: url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.org/2000/svg’ width=‘16’ height=‘16’ viewBox=‘0 0 24 24’ fill=‘none’ stroke=’%238b90b0’ stroke-width=‘2’%3E%3Cpath d=‘m6 9 6 6 6-6’/%3E%3C/svg%3E”); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; }
+
+.btn {
+display: block; width: 100%; padding: 16px; border-radius: var(–radius-sm);
+font-size: 1rem; font-family: inherit; border: none; cursor: pointer;
+transition: opacity .2s, transform .1s; letter-spacing: 0.03em;
+margin-top: 18px;
+}
+.btn:active { transform: scale(0.98); opacity: 0.85; }
+.btn-primary { background: var(–accent); color: #fff; }
+.btn-secondary { background: var(–surface2); color: var(–text); border: 1px solid var(–border); }
+.btn-danger { background: var(–red); color: #fff; }
+.btn-small {
+display: inline-flex; align-items: center; justify-content: center;
+width: 34px; height: 34px; border-radius: 8px; border: none;
+cursor: pointer; transition: opacity .2s; flex-shrink: 0;
+}
+.btn-edit { background: var(–surface2); color: var(–text2); }
+.btn-del { background: rgba(247,95,95,0.15); color: var(–red); }
+
+/* ── EXPENSE LIST ── */
+.expense-item {
+display: flex; align-items: center; gap: 12px;
+padding: 12px 0; border-bottom: 1px solid var(–border);
+}
+.expense-item:last-child { border-bottom: none; }
+.expense-cat-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+.expense-info { flex: 1; min-width: 0; }
+.expense-desc { font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.expense-meta { font-size: 0.75rem; color: var(–text2); margin-top: 2px; }
+.expense-amount { font-size: 1rem; font-variant-numeric: tabular-nums; flex-shrink: 0; }
+.expense-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+/* ── MONTHLY TABLE ── */
+.month-block { margin-bottom: 24px; }
+.month-heading {
+font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em;
+color: var(–text2); padding-bottom: 8px; border-bottom: 1px solid var(–border); margin-bottom: 10px;
+display: flex; justify-content: space-between;
+}
+.month-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(46,51,80,0.5); font-size: 0.9rem; }
+.month-row:last-child { border-bottom: none; }
+.month-total { font-weight: bold; color: var(–text); }
+
+/* ── CHART ── */
+canvas { display: block; }
+.chart-wrap { position: relative; margin: 0 auto; max-width: 240px; }
+.chart-legend { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; justify-content: center; }
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(–text2); }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+/* ── SETUP PAGE ── */
+.setup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.setup-grid > div { }
+.setup-grid label { font-size: 0.65rem; }
+
+/* ── MODALS ── */
+.modal-bg {
+display: none; position: fixed; inset: 0; z-index: 200;
+background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+-webkit-backdrop-filter: blur(4px);
+align-items: flex-end; justify-content: center;
+}
+.modal-bg.open { display: flex; }
+.modal {
+background: var(–surface); border-radius: var(–radius) var(–radius) 0 0;
+border: 1px solid var(–border); border-bottom: none;
+padding: 24px 20px;
+width: 100%; max-width: 500px;
+padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+animation: slideUp .25s ease;
+}
+@keyframes slideUp { from { transform: translateY(60px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.modal h2 { font-size: 1.1rem; margin-bottom: 18px; }
+
+/* ── SUMMARY TOTALS ── */
+.summary-box {
+background: var(–surface2); border-radius: var(–radius-sm);
+padding: 14px 16px; display: flex; justify-content: space-between; align-items: center;
+margin-bottom: 10px;
+}
+.summary-box .s-label { font-size: 0.75rem; color: var(–text2); text-transform: uppercase; letter-spacing: 0.08em; }
+.summary-box .s-val { font-size: 1.2rem; font-variant-numeric: tabular-nums; }
+.s-green { color: var(–green); }
+.s-red { color: var(–red); }
+
+/* ── EMPTY STATE ── */
+.empty { text-align: center; color: var(–text2); padding: 40px 20px; font-size: 0.9rem; font-style: italic; }
+
+/* ── SEARCH / FILTER ── */
+.filter-row { display: flex; gap: 8px; margin-bottom: 14px; }
+.filter-row input, .filter-row select { flex: 1; padding: 11px 12px; font-size: 0.85rem; }
+
+.section-sep { height: 1px; background: var(–border); margin: 20px 0; }
+
+.badge { display: inline-block; font-size: 0.7rem; padding: 2px 7px; border-radius: 20px; font-family: monospace; }
+.badge-cat1 { background: rgba(79,142,247,0.15); color: var(–cat1); }
+.badge-cat2 { background: rgba(46,204,138,0.15); color: var(–cat2); }
+.badge-cat3 { background: rgba(247,201,79,0.15); color: var(–cat3); }
+.badge-cat4 { background: rgba(247,95,95,0.15); color: var(–cat4); }
+</style>
+
 </head>
 <body>
-  <div class="box">
-    <h1>Budget-app</h1>
 
-    <label for="budget">Årsbudget (kr.)</label>
-    <input type="number" id="budget" placeholder="Skriv dit budget">
+<!-- TOP BAR -->
 
-    <label for="forbrug">Brugt indtil nu (kr.)</label>
-    <input type="number" id="forbrug" placeholder="Skriv dit forbrug">
+<div class="topbar">
+  <h1>💰 Mine udgifter <span class="year-badge" id="topYear">—</span></h1>
+</div>
 
-    <button onclick="beregn()">Beregn restbeløb</button>
+<!-- PAGES -->
 
-    <div class="resultat" id="resultat">
-      Her vises dit restbeløb
+<div id="page-overblik" class="page active">
+  <div class="card">
+    <div class="card-title">Årets status</div>
+    <div id="budget-bars"></div>
+  </div>
+  <div style="display:flex;gap:10px;margin-bottom:14px">
+    <div class="summary-box" style="flex:1;margin:0">
+      <div><div class="s-label">Budget</div><div class="s-val" id="sum-budget">—</div></div>
+    </div>
+    <div class="summary-box" style="flex:1;margin:0">
+      <div><div class="s-label">Brugt</div><div class="s-val s-red" id="sum-spent">—</div></div>
+    </div>
+    <div class="summary-box" style="flex:1;margin:0">
+      <div><div class="s-label">Tilbage</div><div class="s-val s-green" id="sum-left">—</div></div>
     </div>
   </div>
+  <div class="card">
+    <div class="card-title">Forbrug pr. kategori</div>
+    <div class="chart-wrap">
+      <canvas id="pieChart" width="220" height="220"></canvas>
+    </div>
+    <div class="chart-legend" id="chart-legend"></div>
+  </div>
+</div>
 
-  <script>
-    function beregn() {
-      const budget = Number(document.getElementById("budget").value);
-      const forbrug = Number(document.getElementById("forbrug").value);
-      const rest = budget - forbrug;
+<div id="page-udgifter" class="page">
+  <div class="filter-row">
+    <input type="text" id="searchInput" placeholder="Søg…" oninput="renderExpenses()">
+    <select id="filterCat" onchange="renderExpenses()">
+      <option value="">Alle</option>
+      <option value="Bil">Bil</option>
+      <option value="Hus">Hus</option>
+      <option value="Disc golf">Disc golf</option>
+      <option value="Fodbold">Fodbold</option>
+    </select>
+  </div>
+  <div id="expense-list"></div>
+</div>
 
-      document.getElementById("resultat").innerHTML =
-        "Du har <strong>" + rest.toLocaleString('da-DK') + " kr.</strong> tilbage.";
-    }
-  </script>
+<div id="page-maaned" class="page">
+  <div id="monthly-view"></div>
+</div>
+
+<div id="page-indstil" class="page">
+  <div class="card">
+    <div class="card-title">Årsopsætning</div>
+    <label>Årstal</label>
+    <input type="number" id="setupYear" placeholder="2025" min="2000" max="2100">
+    <div class="section-sep"></div>
+    <div class="card-title">Budgetbeløb (kr.)</div>
+    <div class="setup-grid">
+      <div><label>🚗 Bil</label><input type="number" id="bud-Bil" placeholder="0"></div>
+      <div><label>🏠 Hus</label><input type="number" id="bud-Hus" placeholder="0"></div>
+      <div><label>🥏 Disc golf</label><input type="number" id="bud-Disc golf" placeholder="0"></div>
+      <div><label>⚽ Fodbold</label><input type="number" id="bud-Fodbold" placeholder="0"></div>
+    </div>
+    <button class="btn btn-primary" onclick="saveSetup()">Gem opsætning</button>
+  </div>
+  <div class="card">
+    <div class="card-title">Data</div>
+    <button class="btn btn-secondary" onclick="exportCSV()">📥 Eksporter til CSV</button>
+    <button class="btn btn-danger" style="margin-top:10px" onclick="confirmClear()">🗑️ Slet alle data</button>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+
+<nav class="botnav">
+  <button class="active" onclick="showPage('overblik', this)">
+    <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    Overblik
+  </button>
+  <button onclick="showPage('udgifter', this)">
+    <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
+    Udgifter
+  </button>
+  <button onclick="showPage('maaned', this)">
+    <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    Måneder
+  </button>
+  <button onclick="showPage('indstil', this)">
+    <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    Indstil
+  </button>
+  <!-- FAB -->
+  <button onclick="openAddModal()" style="position:absolute;right:16px;bottom:calc(72px + env(safe-area-inset-bottom,0px));width:54px;height:54px;border-radius:50%;background:var(--accent);color:#fff;font-size:1.5rem;flex-direction:row;padding:0;box-shadow:0 4px 20px rgba(79,142,247,0.4);">+</button>
+</nav>
+
+<!-- ADD / EDIT MODAL -->
+
+<div class="modal-bg" id="expenseModal">
+  <div class="modal">
+    <h2 id="modalTitle">Tilføj udgift</h2>
+    <input type="hidden" id="editId">
+    <label>Dato</label>
+    <input type="date" id="expDate">
+    <label>Kategori</label>
+    <select id="expCat">
+      <option value="Bil">🚗 Bil</option>
+      <option value="Hus">🏠 Hus</option>
+      <option value="Disc golf">🥏 Disc golf</option>
+      <option value="Fodbold">⚽ Fodbold</option>
+    </select>
+    <label>Beløb (kr.)</label>
+    <input type="number" id="expAmount" placeholder="0" min="0" step="1">
+    <label>Beskrivelse (valgfrit)</label>
+    <input type="text" id="expDesc" placeholder="F.eks. brændstof…">
+    <button class="btn btn-primary" onclick="saveExpense()">Gem</button>
+    <button class="btn btn-secondary" style="margin-top:8px" onclick="closeModal()">Annuller</button>
+  </div>
+</div>
+
+<script>
+// ── DATA LAYER ──
+const CATS = ['Bil','Hus','Disc golf','Fodbold'];
+const CAT_ICONS = { 'Bil':'🚗', 'Hus':'🏠', 'Disc golf':'🥏', 'Fodbold':'⚽' };
+const CAT_COLORS = { 'Bil':'#4f8ef7', 'Hus':'#2ecc8a', 'Disc golf':'#f7c94f', 'Fodbold':'#f75f5f' };
+const CAT_CLASS = { 'Bil':'badge-cat1', 'Hus':'badge-cat2', 'Disc golf':'badge-cat3', 'Fodbold':'badge-cat4' };
+const MONTHS = ['Januar','Februar','Marts','April','Maj','Juni','Juli','August','September','Oktober','November','December'];
+
+function load(key, def) { try { return JSON.parse(localStorage.getItem(key)) ?? def; } catch { return def; } }
+function save(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+
+function getSetup() { return load('setup', { year: new Date().getFullYear(), budgets: { Bil:0, Hus:0, 'Disc golf':0, Fodbold:0 } }); }
+function getExpenses() { return load('expenses', []); }
+function saveExpenses(arr) { save('expenses', arr); }
+
+// ── NAVIGATION ──
+function showPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelectorAll('.botnav button').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  if (name === 'overblik') renderOverblik();
+  if (name === 'udgifter') renderExpenses();
+  if (name === 'maaned') renderMonthly();
+  if (name === 'indstil') loadSetup();
+}
+
+// ── SETUP PAGE ──
+function loadSetup() {
+  const s = getSetup();
+  document.getElementById('setupYear').value = s.year;
+  CATS.forEach(c => { const el = document.getElementById('bud-'+c); if (el) el.value = s.budgets[c] || ''; });
+}
+function saveSetup() {
+  const year = parseInt(document.getElementById('setupYear').value) || new Date().getFullYear();
+  const budgets = {};
+  CATS.forEach(c => { budgets[c] = parseFloat(document.getElementById('bud-'+c).value) || 0; });
+  save('setup', { year, budgets });
+  renderAll();
+  showFeedback('Opsætning gemt ✓');
+}
+
+// ── OVERBLIK ──
+function renderOverblik() {
+  const s = getSetup();
+  const expenses = getExpenses();
+  document.getElementById('topYear').textContent = s.year;
+
+  // totals
+  let totalBudget = 0, totalSpent = 0;
+  CATS.forEach(c => { totalBudget += s.budgets[c] || 0; });
+  expenses.forEach(e => { totalSpent += e.amount; });
+  const totalLeft = totalBudget - totalSpent;
+  document.getElementById('sum-budget').textContent = fmt(totalBudget);
+  document.getElementById('sum-spent').textContent = fmt(totalSpent);
+  document.getElementById('sum-left').textContent = fmt(totalLeft);
+
+  // bars
+  const container = document.getElementById('budget-bars');
+  container.innerHTML = '';
+  CATS.forEach(c => {
+    const budget = s.budgets[c] || 0;
+    const spent = expenses.filter(e => e.cat === c).reduce((a, e) => a + e.amount, 0);
+    const left = budget - spent;
+    const pct = budget > 0 ? Math.min((spent / budget) * 100, 100) : 0;
+    const barClass = pct < 70 ? 'bar-ok' : pct < 90 ? 'bar-warn' : 'bar-over';
+    container.innerHTML += `
+      <div class="budget-item">
+        <div class="budget-row">
+          <div class="budget-label">
+            <div class="cat-dot" style="background:${CAT_COLORS[c]}"></div>
+            ${CAT_ICONS[c]} ${c}
+          </div>
+          <div class="budget-amounts">
+            <strong>${fmt(spent)}</strong> / ${fmt(budget)}
+          </div>
+        </div>
+        <div class="bar-track"><div class="bar-fill ${barClass}" style="width:${pct}%"></div></div>
+        <div class="bar-pct">${left >= 0 ? fmt(left) + ' tilbage' : fmt(Math.abs(left)) + ' over budget'} · ${pct.toFixed(0)}%</div>
+      </div>`;
+  });
+
+  // pie chart
+  drawPie(expenses);
+}
+
+function drawPie(expenses) {
+  const canvas = document.getElementById('pieChart');
+  const ctx = canvas.getContext('2d');
+  const size = 220;
+  canvas.width = size; canvas.height = size;
+  ctx.clearRect(0, 0, size, size);
+
+  const totals = {};
+  CATS.forEach(c => totals[c] = 0);
+  expenses.forEach(e => { if (totals[e.cat] !== undefined) totals[e.cat] += e.amount; });
+  const total = Object.values(totals).reduce((a,b) => a+b, 0);
+
+  const legend = document.getElementById('chart-legend');
+  legend.innerHTML = '';
+
+  if (total === 0) {
+    ctx.beginPath();
+    ctx.arc(size/2, size/2, size/2 - 10, 0, Math.PI*2);
+    ctx.fillStyle = '#22263a';
+    ctx.fill();
+    ctx.fillStyle = '#8b90b0';
+    ctx.font = '13px Georgia';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Ingen data', size/2, size/2);
+    return;
+  }
+
+  let startAngle = -Math.PI / 2;
+  CATS.forEach(c => {
+    const val = totals[c];
+    if (val === 0) return;
+    const slice = (val / total) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(size/2, size/2);
+    ctx.arc(size/2, size/2, size/2 - 6, startAngle, startAngle + slice);
+    ctx.closePath();
+    ctx.fillStyle = CAT_COLORS[c];
+    ctx.fill();
+    ctx.strokeStyle = '#0f1117';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    startAngle += slice;
+    const pct = ((val/total)*100).toFixed(0);
+    legend.innerHTML += `<div class="legend-item"><div class="legend-dot" style="background:${CAT_COLORS[c]}"></div>${CAT_ICONS[c]} ${c} – ${pct}%</div>`;
+  });
+
+  // center hole
+  ctx.beginPath();
+  ctx.arc(size/2, size/2, size/2 - 48, 0, Math.PI*2);
+  ctx.fillStyle = '#1a1d27';
+  ctx.fill();
+  ctx.fillStyle = '#e8eaf6';
+  ctx.font = 'bold 14px Georgia';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(fmt(total), size/2, size/2);
+}
+
+// ── EXPENSE LIST ──
+function renderExpenses() {
+  const expenses = getExpenses();
+  const q = (document.getElementById('searchInput')?.value || '').toLowerCase();
+  const cat = document.getElementById('filterCat')?.value || '';
+  const filtered = expenses.filter(e => {
+    if (cat && e.cat !== cat) return false;
+    if (q && !(e.desc.toLowerCase().includes(q) || e.cat.toLowerCase().includes(q))) return false;
+    return true;
+  }).sort((a,b) => b.date.localeCompare(a.date));
+
+  const el = document.getElementById('expense-list');
+  if (filtered.length === 0) { el.innerHTML = '<div class="empty">Ingen udgifter endnu</div>'; return; }
+
+  el.innerHTML = filtered.map(e => `
+    <div class="expense-item">
+      <div class="cat-dot expense-cat-dot" style="background:${CAT_COLORS[e.cat]}"></div>
+      <div class="expense-info">
+        <div class="expense-desc">${e.desc || e.cat}</div>
+        <div class="expense-meta">${fmtDate(e.date)} · <span class="badge ${CAT_CLASS[e.cat]}">${e.cat}</span></div>
+      </div>
+      <div class="expense-amount">${fmt(e.amount)}</div>
+      <div class="expense-actions">
+        <button class="btn-small btn-edit" onclick="openEditModal('${e.id}')">✏️</button>
+        <button class="btn-small btn-del" onclick="deleteExpense('${e.id}')">🗑️</button>
+      </div>
+    </div>`).join('');
+}
+
+// ── MONTHLY VIEW ──
+function renderMonthly() {
+  const expenses = getExpenses();
+  const s = getSetup();
+  const byMonth = {};
+  expenses.forEach(e => {
+    const m = parseInt(e.date.split('-')[1]) - 1;
+    if (!byMonth[m]) byMonth[m] = { total: 0, cats: {} };
+    byMonth[m].total += e.amount;
+    byMonth[m].cats[e.cat] = (byMonth[m].cats[e.cat] || 0) + e.amount;
+  });
+
+  const el = document.getElementById('monthly-view');
+  if (Object.keys(byMonth).length === 0) { el.innerHTML = '<div class="empty">Ingen udgifter registreret endnu</div>'; return; }
+
+  el.innerHTML = Object.keys(byMonth).sort((a,b) => b-a).map(m => {
+    const data = byMonth[m];
+    const catRows = CATS.filter(c => data.cats[c]).map(c => `
+      <div class="month-row">
+        <span><span class="cat-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${CAT_COLORS[c]};margin-right:6px"></span>${CAT_ICONS[c]} ${c}</span>
+        <span>${fmt(data.cats[c])}</span>
+      </div>`).join('');
+    return `<div class="month-block card">
+      <div class="month-heading">
+        <span>${MONTHS[m]}</span>
+        <span class="month-total">${fmt(data.total)}</span>
+      </div>
+      ${catRows}
+    </div>`;
+  }).join('');
+}
+
+// ── MODAL ──
+function openAddModal() {
+  document.getElementById('modalTitle').textContent = 'Tilføj udgift';
+  document.getElementById('editId').value = '';
+  document.getElementById('expDate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('expCat').value = 'Bil';
+  document.getElementById('expAmount').value = '';
+  document.getElementById('expDesc').value = '';
+  document.getElementById('expenseModal').classList.add('open');
+}
+function openEditModal(id) {
+  const e = getExpenses().find(x => x.id === id);
+  if (!e) return;
+  document.getElementById('modalTitle').textContent = 'Rediger udgift';
+  document.getElementById('editId').value = id;
+  document.getElementById('expDate').value = e.date;
+  document.getElementById('expCat').value = e.cat;
+  document.getElementById('expAmount').value = e.amount;
+  document.getElementById('expDesc').value = e.desc || '';
+  document.getElementById('expenseModal').classList.add('open');
+}
+function closeModal() { document.getElementById('expenseModal').classList.remove('open'); }
+
+function saveExpense() {
+  const id = document.getElementById('editId').value;
+  const date = document.getElementById('expDate').value;
+  const cat = document.getElementById('expCat').value;
+  const amount = parseFloat(document.getElementById('expAmount').value);
+  const desc = document.getElementById('expDesc').value.trim();
+  if (!date || !cat || isNaN(amount) || amount <= 0) { alert('Udfyld dato, kategori og beløb.'); return; }
+
+  let expenses = getExpenses();
+  if (id) {
+    expenses = expenses.map(e => e.id === id ? { ...e, date, cat, amount, desc } : e);
+  } else {
+    expenses.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2,6), date, cat, amount, desc });
+  }
+  saveExpenses(expenses);
+  closeModal();
+  renderAll();
+}
+
+function deleteExpense(id) {
+  if (!confirm('Slet denne udgift?')) return;
+  saveExpenses(getExpenses().filter(e => e.id !== id));
+  renderAll();
+}
+
+// ── EXPORT CSV ──
+function exportCSV() {
+  const expenses = getExpenses();
+  if (!expenses.length) { alert('Ingen udgifter at eksportere.'); return; }
+  const rows = [['Dato','Kategori','Beløb','Beskrivelse']];
+  expenses.sort((a,b) => a.date.localeCompare(b.date)).forEach(e => {
+    rows.push([e.date, e.cat, e.amount.toString().replace('.',','), e.desc || '']);
+  });
+  const csv = rows.map(r => r.map(v => '"'+v.replace(/"/g,'""')+'"').join(';')).join('\r\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'udgifter.csv'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function confirmClear() {
+  if (confirm('Er du sikker på, at du vil slette ALLE data? Dette kan ikke fortrydes.')) {
+    localStorage.clear();
+    renderAll();
+    loadSetup();
+    showFeedback('Alle data slettet');
+  }
+}
+
+// ── HELPERS ──
+function fmt(n) {
+  return new Intl.NumberFormat('da-DK', { style: 'currency', currency: 'DKK', maximumFractionDigits: 0 }).format(n);
+}
+function fmtDate(d) {
+  const [y,m,day] = d.split('-');
+  return `${day}. ${MONTHS[parseInt(m)-1].slice(0,3).toLowerCase()}. ${y}`;
+}
+function renderAll() {
+  const cur = document.querySelector('.page.active')?.id?.replace('page-','');
+  if (cur === 'overblik') renderOverblik();
+  if (cur === 'udgifter') renderExpenses();
+  if (cur === 'maaned') renderMonthly();
+  document.getElementById('topYear').textContent = getSetup().year;
+}
+function showFeedback(msg) {
+  const d = document.createElement('div');
+  d.textContent = msg;
+  Object.assign(d.style, {
+    position:'fixed', top:'70px', left:'50%', transform:'translateX(-50%)',
+    background:'#2ecc8a', color:'#fff', padding:'10px 20px', borderRadius:'20px',
+    zIndex:'999', fontSize:'0.85rem', fontFamily:'monospace', boxShadow:'0 4px 16px rgba(0,0,0,0.4)',
+    transition:'opacity .5s'
+  });
+  document.body.appendChild(d);
+  setTimeout(() => { d.style.opacity='0'; setTimeout(() => d.remove(), 500); }, 1800);
+}
+
+// Close modal on backdrop tap
+document.getElementById('expenseModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// ── INIT ──
+renderOverblik();
+document.getElementById('topYear').textContent = getSetup().year;
+</script>
+
 </body>
 </html>
